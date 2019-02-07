@@ -1,6 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace danjam\dotty;
+namespace danjam\Dotty;
+
+use InvalidArgumentException;
 
 /**
  * Class Dotty
@@ -8,54 +10,60 @@ namespace danjam\dotty;
 class Dotty
 {
     /** @var string */
-    private $delimiter = '.';
+    private const DELIMITER = '.';
+
+    /** @var string */
+    public const ERROR_INVALID_KEY = 'Invalid key, or key not found - ';
+
+    /** @var string */
+    public const ERROR_EMPTY_KEY = 'Key cannot be empty';
+
+    /** @var array */
+    private $data = [];
 
     /**
-     * ArrayDotNotation constructor.
+     * Dotty constructor
      *
-     * @param string|null $delimiter
+     * @param array $data
      */
-    public function __construct(string $delimiter = null)
+    public function __construct(array $data)
     {
-        if (!is_null($delimiter)) {
-            $this->setDelimiter($delimiter);
-        }
-    }
-
-    /**
-     * @param $delimiter
-     *
-     * @return $this
-     */
-    public function setDelimiter(string $delimiter)
-    {
-        $this->delimiter = $delimiter;
-
-        return $this;
+        $this->data = $data;
     }
 
     /**
      * @param string $key
-     * @param array  $array
      *
      * @return mixed
+     *
+     * @throws InvalidArgumentException
      */
-    public function get(string $key, array $array)
+    public function get(string $key)
     {
-        if (strpos($key, $this->delimiter) === false && array_key_exists($key, $array)) {
-            return $array[$key];
+        if ($key === '') {
+            throw new InvalidArgumentException(self::ERROR_EMPTY_KEY);
         }
 
-        $keyParts = explode($this->delimiter, $key);
+        $keyParts = explode(self::DELIMITER, $key);
+
+        $array = $this->data;
 
         foreach ($keyParts as $keyPart) {
-            if (!array_key_exists($keyPart, $array)) {
-                throw new InvalidArgumentException('Invalid key ' . $key);
+            if (!isset($array[$keyPart])) {
+                throw new InvalidArgumentException(self::ERROR_INVALID_KEY . $key);
             }
 
             $array = $array[$keyPart];
         }
 
         return $array;
+    }
+
+    /**
+     * @return array
+     */
+    public function all(): array
+    {
+        return $this->data;
     }
 }
